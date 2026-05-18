@@ -1,0 +1,28 @@
+# python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.env
+
+# esp
+*.o
+*.obj
+*.out
+*.exe
+*.dll
+*.lib
+build/
+bin/
+Debug/
+Release/
+.pio/
+
+# web
+npm-debug.log
+
+# vs code
+.vscode/
+.DS_Store
+Thumbs.db
