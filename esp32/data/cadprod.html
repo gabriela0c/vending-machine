@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro Produto</title>
+    <link rel="stylesheet" href="css/caduser.css">
+
+</head>
+<body>
+
+    <div class="cad-box" id="cadbox">
+
+        <h2 id="cad">CADASTRAR PRODUTO</h2>
+
+        <div id="imgbox-cad">
+            <img id="caduser" src="png/prod2.png" alt="Usuário">
+        </div>
+
+        <form id="formprod" > 
+
+            <input 
+                type="text"
+                id="nomeprod"
+                name="nomeprod"
+                placeholder="Nome do produto"
+                required />
+            <input 
+                type="number"
+                id="valorprod"
+                name="valorprod"
+                min="1"
+                step="0.01"
+                placeholder="Valor (0,00)"
+                required />
+            
+            <div id="legenda">
+                <legend > O produto é para maiores de idade?</legend>
+            </div>
+            
+            <div class="maioridade">
+                <div class="sim">
+                <input
+                    type="radio"
+                    id="maioridade1"
+                    name="maioridade"
+                    value="sim" 
+                    checked />
+                    
+                    <div class="maioridade1">
+                <label for="maioridade1">Sim</label>
+            </div>
+            </div>
+            <div class="sim">
+                <input 
+                    type="radio"
+                    id="maioridade2"
+                    name="maioridade" 
+                    value="nao"/>
+                    
+                <label for="maioridade2">Não</label>
+            </div>
+            </div>
+            <div>
+            <button id="loginbt" type="submit">Cadastrar Produto</button>
+            </div>
+        </form>
+
+    </div>
+
+<div class="home">
+  <button class="btn-icon-home" onclick="GoToIndex()">
+    <img src="png/house.png" alt="">
+  </button>
+</div>
+  
+    <script src="js/cadprod.js"></script>
+
+</body>
+</html>

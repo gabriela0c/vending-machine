@@ -1,0 +1,221 @@
+@import url('https://fonts.googleapis.com/css2?family=Questrial&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Questrial", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+body {
+  height: 100vh;
+  background: #2c2c2c;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#cadbox{
+  width: 450px;
+  height: 560px;
+  background: #bdbdbd;
+  border-radius: 8px;
+  overflow: hidden;
+  text-align: center;
+}
+
+#cad {
+  display: block;
+  background: #5a5a5a;
+  color: white;
+  padding: 15px;
+  font-size: 35px;
+  letter-spacing: 1px;
+}
+
+#imgbox-cad {
+  padding: 5px;
+}
+
+/* Avatar */
+#caduser {
+  width: 120px;
+  height: 120px;
+  background: transparent;
+  border-radius: 10px;
+  padding: 0px;
+  object-fit: contain;
+  opacity: 0.8;
+}
+
+/* Inputs */
+input {
+  width: 80%;
+  height: 45px;
+  padding: 10px;
+  font-size: 19px ;
+  margin: 7px 0;
+  border: none;
+  background: #9e9e9e;
+  color: white;
+}
+
+input::placeholder {
+  color: #ddd;
+}
+
+#legenda {
+    width: 80%;
+    height: 20px;
+    padding: 0px;
+    font-size: 21px ;
+    border: none;
+    color: white;
+}
+
+
+.maioridade label {
+
+    font-size: 25px;
+}
+
+#maioridade1 {
+  display: flex;
+    height: 25px;
+    width: 25px;
+    padding: 0px;
+    font-size: 59px ;
+    margin: 10px 0px;
+    border: none;
+    background: #9e9e9e;
+    color: black;
+    
+
+}
+.sim {
+    display: flex;
+    align-items: center;
+    justify-content: left;
+    gap: 12px;
+
+}
+
+#maioridade2 {
+    height: 25px;
+    width: 25px;
+    padding: 10px;
+    margin: 0px 0px;
+    border: none;
+    background: #9e9e9e;
+    color: black;
+
+}
+.maioridade {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 50px;
+    
+
+}
+
+/* Botão */
+#loginbt{
+  width: 80%;
+  height: 40px;
+  padding: 10px;
+  font-size: 18px;
+  margin: 10px 0 20px;
+  background: #9e9e9e;
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: #7a7a7a;
+}
+
+/* recfac -------------------------------------------------- */
+
+#loginbtfac{
+  width: 80%;
+  height: 40px;
+  padding: 10px;
+  font-size: 20px;
+  margin: 10px 0 20px;
+  background: #9e9e9e;
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#cadfac{
+  display: block;
+  background: #5a5a5a;
+  color: white;
+  padding: 15px;
+  font-size: 30px;
+  letter-spacing: 1px;
+}
+
+
+
+#imgbox-cad-fac{
+  padding: 0px;
+  height: 360px;
+
+}
+#imgbox-cad-fac img{
+  padding: 5px;
+  height: 370px;
+  width: 320px;
+
+}
+
+/* home */
+
+.home {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  background-color: transparent;
+  width: 100px;
+  height: 100px;
+  border-radius: 10px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  cursor: pointer;
+
+}
+
+
+.home img{
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+
+}
+
+.home:hover {
+  background-color: transparent;
+  transform: scale(1.1);
+  cursor: pointer;
+  
+}
+
+.btn-iconhome{
+  background-color: #2e2e2e;
+}
+
+.home button{
+  background-color: transparent;
+  border-radius: 10px;
+}
