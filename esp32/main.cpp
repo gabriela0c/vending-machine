@@ -247,6 +247,12 @@ void setup() {
     request->send(400, "text/plain", "Nome nao fornecido ou erro");
   });
 
+  //Define a primeira pagina ao acessar o IP como sendo a de login
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+
+  request->send(LittleFS, "/login.html", "text/html");
+
+  });
   // Inicia o Servidor
   server.begin();
 }
