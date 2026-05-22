@@ -2,6 +2,69 @@
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 #include <ArduinoJson.h>
+#include <HTTPClient.h>
+
+//TODO: TESTAR SE O CODIGO FUNCIONA NO ESP ; SALVAR FOTO NO COMPUTADOR NA HORA DE CADASTRAR (PYTHON) ; MUDAR MAIORIDADE PARA BOOL; REQUEST GESTOS;
+// VERIFICAR O SALDO DO USUARIO ANTES DE LIBERAR O PRODUTO
+//tem que testar se o site ta salvando o usuario do jeito certo tambem
+
+//O que eu(vini) mudei: caduser.js: (função solicitarReconhecimento) ; python: adaptei para estrutura de requests (nao sei se funciona)
+// main.cpp: criei struct usuariologado e uma função genérica para o esp mandar o request pro python e ser retornado o usuario (ja ta salvando na struct (nao sei se funciona))
+
+
+// Estrutura para armazenar os dados do usuário logado
+struct UsuarioLogado {
+  bool autorizado = false;
+  String nome = "";
+  double saldo = 0.0;
+  String maioridade = "";
+};
+
+UsuarioLogado solicitarReconhecimentoFacial() {
+  UsuarioLogado usuario; // Cria uma instância limpa (autorizado = false)
+  
+  // 1. Conecta e envia o comando para o Python abrir a câmera
+  HTTPClient http;
+  String urlPython = "http://192.168.1.100:5000/disparar-camera"; // IP do seu PC
+  
+  http.begin(urlPython);
+  http.addHeader("Content-Type", "application/json");
+  
+  int httpResponseCode = http.POST("{}"); 
+  String nomeReconhecido = "Desconhecido";
+
+  if (httpResponseCode > 0) {
+    String respostaPython = http.getString();
+    StaticJsonDocument<200> docPython;
+    deserializeJson(docPython, respostaPython);
+    nomeReconhecido = docPython["usuario"].as<String>();
+  }
+  http.end(); // Fecha conexão com o Python
+
+  // 2. Se o Python encontrou alguém, valida no LittleFS do ESP32
+  if (nomeReconhecido != "Desconhecido" && nomeReconhecido != "Erro ao abrir camera") {
+    DynamicJsonDocument docBanco(4096);
+    String conteudoAtual = lerArquivo("/usuarios.json"); // Sua função de leitura do LittleFS
+    
+    if (conteudoAtual != "") {
+      deserializeJson(docBanco, conteudoAtual);
+      JsonArray usuarios = docBanco["usuarios"];
+      
+      for (JsonObject u : usuarios) {
+        if (u["nome"].as<String>() == nomeReconhecido) {
+          // Preenche a estrutura com os dados do arquivo local
+          usuario.autorizado = true;
+          usuario.nome = u["nome"].as<String>();
+          usuario.saldo = u["saldo"].as<double>();
+          usuario.maioridade = u["maioridade"].as<String>();
+          return usuario; // Retorna o usuário preenchido imediatamente
+        }
+      }
+    }
+  }
+
+  return usuario; // Retorna com autorizado = false se falhar ou não achar no JSON
+}
 
 // --- Configurações do Wi-Fi ---
 const char* ssid = "NOME_DA_SUA_REDE";
@@ -172,7 +235,7 @@ void setup() {
       StaticJsonDocument<512> docNovo;
       deserializeJson(docNovo, data, len);
 
-      // Monta o objeto de forma explícita igual ao seu Node.js
+      // Monta o objeto de forma explícita igual Node.js
       StaticJsonDocument<256> usuarioFormatado;
       usuarioFormatado["nome"] = docNovo["nome"];
       usuarioFormatado["cpf"] = docNovo["cpf"];
@@ -215,6 +278,25 @@ void setup() {
       gravarArquivo("/usuarios.json", resultado);
     }
   );
+
+// CADASTRAR USUARIO PELO SITE
+server.on("/solicitar-reconhecimento", HTTP_GET, [](AsyncWebServerRequest *request) {
+  
+  // Chama a função
+    UsuarioLogado user = solicitarReconhecimentoFacial();
+    
+    // Prepara o JSON de resposta para o navegador
+    StaticJsonDocument<256> resposta;
+    resposta["autorizado"] = user.autorizado;
+    resposta["nome"] = user.nome;
+    resposta["saldo"] = user.saldo;
+    resposta["maioridade"] = user.maioridade; //MUDAR MAIORIDADE PARA BOOL ASSIM QUE POSSIVEL
+    
+    String jsonResposta;
+    serializeJson(resposta, jsonResposta);
+    
+    request->send(200, "application/json", jsonResposta);
+  });
 
   // DELETE /deletar-usuario -> DELETAR USUÁRIO
   server.on("/deletar-usuario", HTTP_DELETE, [](AsyncWebServerRequest *request) {

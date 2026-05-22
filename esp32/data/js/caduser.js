@@ -64,10 +64,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
             console.log(texto);
 
-            alert("Cadastro completo");
+            alert("Dados salvos. Prosseguindo para o reconhecimento facial.");
 
-
-            GoToIndex();
+            iniciarReconhecimentoFacial();
             
         }
         catch(err) {
@@ -79,4 +78,19 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 
 });
+
+async function iniciarReconhecimentoFacial() {
+    console.log("Pedindo para o ESP32 acionar o Python...");
+    
+    // O fetch vai "ficar parado" aqui enquanto o Python abre a câmera no PC e processa
+    const resposta = await fetch('/solicitar-reconhecimento');
+    const resultado = await resposta.json();
+
+    if (resultado.autorizado) {
+        alert(`Acesso Liberado! Olá ${resultado.nome}. Saldo: R$ ${resultado.saldo}`);
+        window.location.href = "/geruser.html";
+    } else {
+        alert("Falha no reconhecimento facial ou usuário não cadastrado.");
+    }
+}
 
