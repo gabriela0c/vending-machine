@@ -1,11 +1,11 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request  # <-- ADICIONADO 'request' AQUI
 import face_recognition
 import os
 import cv2
 import numpy as np
 import time
 
-#TO DO: VER MAIN.CPP 
+app = Flask(__name__)
 
 KNOWN_FACES_DIR = "known_faces"
 TOLERANCE = 0.6
@@ -18,112 +18,135 @@ print("carregando rostos conhecidos...")
 known_faces = []
 known_names = []
 
-# carrega as imagens da pasta
+if not os.path.exists(KNOWN_FACES_DIR):
+    os.makedirs(KNOWN_FACES_DIR)
+
 for filename in os.listdir(KNOWN_FACES_DIR):
-    # ignora arquivos ocultos ou de sistema
     if filename.startswith('.'):
         continue
-        
-    filepath = f"{KNOWN_FACES_DIR}/{filename}"
-    
-    # verifica se é realmente um arquivo antes de tentar abrir
+    filepath = os.path.join(KNOWN_FACES_DIR, filename)
     if os.path.isfile(filepath):
         image = face_recognition.load_image_file(filepath)
-        
-        # garante que um rosto foi encontrado
         encodings = face_recognition.face_encodings(image)
         if len(encodings) > 0:
-            encoding = encodings[0]
-            known_faces.append(encoding)
-            
-            # pega o nome do arquivo sem a extensão
+            known_faces.append(encodings[0])
             name = os.path.splitext(filename)[0]
-            
             known_names.append(name)
             print(f"rosto de {name} carregado.")
 
 def executarReconhecimento():
     print("iniciando a webcam para o ESP32")
     video_capture = cv2.VideoCapture(0)
+    match = "Desconhecido" 
+    timeout = time.time() + 10 
 
-    match = "Desconhecido" # Nome padrão se não encontrar ninguém
-
-    timeout = time.time() + 45 #Defini um tempo limite para evitar de crashar o programa
-
-    while time.time()<timeout:
+    while time.time() < timeout:
         ret, frame = video_capture.read()
-        
         if not ret:
-            print("não foi possível acessar a câmera.")
             break
 
-        # converte do opencv pro face-recognition
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        # encontra todos os rostos e suas codificações no frame atual
         locations = face_recognition.face_locations(rgb_frame, model=MODEL)
         encodings = face_recognition.face_encodings(rgb_frame, locations)
 
         for face_encoding, face_location in zip(encodings, locations):
-            # compara o rosto encontrado com os rostos conhecidos
             results = face_recognition.compare_faces(known_faces, face_encoding, TOLERANCE)
-            color = [0, 0, 255]    # Vermelho para desconhecidos
-
-            # usa a distância para encontrar a pessoa mais parecida, 
-            # em vez de pegar apenas a primeira que der true
+            color = [0, 0, 255]    
             face_distances = face_recognition.face_distance(known_faces, face_encoding)
             if len(face_distances) > 0:
                 best_match_index = np.argmin(face_distances)
                 if results[best_match_index]:
                     match = known_names[best_match_index]
-                    color = [0, 255, 0] # Verde para conhecidos
-                    print(f"Rosto reconhecido: {match}")
+                    color = [0, 255, 0] 
 
-            # extrai as coordenadas do rosto
             top, right, bottom, left = face_location
-
-            # desenha o retângulo ao redor do rosto
             cv2.rectangle(frame, (left, top), (right, bottom), color, FRAME_THICKNESS)
-
-            # desenha o fundo do texto
             cv2.rectangle(frame, (left, bottom - 25), (right, bottom), color, cv2.FILLED)
-            
-            # escreve o nome da pessoa
             cv2.putText(frame, match, (left + 6, bottom - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), FONT_THICKNESS)
 
-        #encerra o loop de processamento se encontrar o rosto (tirar caso de problema) 
-        if match != "Desconhecido":
-            cv2.waitKey(500) 
+        cv2.imshow("Reconhecimento Facial", frame)
+        if match != "Desconhecido" or cv2.waitKey(1) & 0xFF == ord('q'):
             break
         
-        #apertar q para sair do reconhecimento (caso de muito errado)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-        
-
-
-    # libera a câmera e fecha as janelas
     video_capture.release()
     cv2.destroyAllWindows()
-
     return match
 
-#SALVAR FOTO NO NOTEBOOK
-#def salvarFoto()
-    #TO DO
+# ==================== NOVA FUNÇÃO DE CADASTRO ====================
+def executarCadastro(nome):
+    print(f"Aguardando posicionamento do rosto para: {nome}")
+    video_capture = cv2.VideoCapture(0)
+    timeout = time.time() + 15  # Dá 15 segundos para o usuário se posicionar na câmera
+    sucesso = False
 
-#ROTA QUE O ESP VAI CHAMAR
+    while time.time() < timeout:
+        ret, frame = video_capture.read()
+        if not ret:
+            break
+
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        locations = face_recognition.face_locations(rgb_frame, model=MODEL)
+        
+        # Cria uma cópia do frame para desenhar elementos visuais de instrução
+        frame_instrucao = frame.copy()
+
+        if len(locations) == 1:
+            # Encontrou exatamente uma pessoa. Salva e processa!
+            top, right, bottom, left = locations[0]
+            cv2.rectangle(frame_instrucao, (left, top), (right, bottom), (0, 255, 0), FRAME_THICKNESS)
+            cv2.putText(frame_instrucao, "Rosto Detectado! Capturando...", (10, 30), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), FONT_THICKNESS)
+            cv2.imshow("Cadastro de Face", frame_instrucao)
+            cv2.waitKey(1000) # Mantém a tela travada em verde por 1 segundo
+
+            # Salva o frame original limpo (sem retângulos desenhados)
+            filepath = os.path.join(KNOWN_FACES_DIR, f"{nome}.jpg")
+            cv2.imwrite(filepath, frame)
+
+            # Atualiza a memória RAM do script em tempo real (sem precisar reiniciar o Python)
+            image = face_recognition.load_image_file(filepath)
+            encodings = face_recognition.face_encodings(image)
+            if len(encodings) > 0:
+                known_faces.append(encodings[0])
+                known_names.append(nome)
+                print(f"Rosto de {nome} adicionado e indexado com sucesso.")
+                sucesso = True
+                break
+        elif len(locations) > 1:
+            cv2.putText(frame_instrucao, "Erro: Mais de uma pessoa na camera!", (10, 30), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), FONT_THICKNESS)
+        else:
+            cv2.putText(frame_instrucao, "Olhe fixamente para a camera...", (10, 30), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), FONT_THICKNESS)
+
+        cv2.imshow("Cadastro de Face", frame_instrucao)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    video_capture.release()
+    cv2.destroyAllWindows()
+    return sucesso
+
 @app.route("/get-usuario", methods=["POST"])
 def disparar_camera():
-    print("\n[HTTP] Requisição recebida do ESP32!")
-    
-    # Chama a função que abre a webcam e processa
+    print("\n[HTTP] Requisição de RECONHECIMENTO recebida!")
     usuario = executarReconhecimento()
-    
-    # Retorna o JSON exatamente como o ESP32 espera receber no main.cpp
     return jsonify({"usuario": usuario})
 
+# ==================== NOVA ROTA DE CADASTRO ====================
+@app.route("/cadastrar-rosto", methods=["POST"])
+def cadastrar_rosto():
+    print("\n[HTTP] Requisição de CADASTRO recebida!")
+    dados = request.get_json()
+    nome = dados.get("nome")
+    
+    if not nome:
+        return jsonify({"status": "erro", "mensagem": "Nome nao enviado"}), 400
+        
+    if executarCadastro(nome):
+        return jsonify({"status": "sucesso", "mensagem": f"Rosto de {nome} cadastrado!"}), 200
+    else:
+        return jsonify({"status": "erro", "mensagem": "Nao foi possivel detectar o rosto ou deu Timeout"}), 500
 
 if __name__ == "__main__":
-    # Roda o servidor Flask. O host="0.0.0.0" permite que o ESP32 encontre o PC na rede local
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="192.168.4.2", port=5000)

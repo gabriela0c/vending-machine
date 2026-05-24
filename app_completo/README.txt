@@ -1,0 +1,1 @@
+baixe tudo do requirements usando PYTHON 3.10.11 !!!!!!!!!!!

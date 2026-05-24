@@ -16,7 +16,7 @@
             <img id="user" src="png/user.png" alt="Usuário">
         </div>
 
-        <form action="./index.html" method="get"> 
+        <form id="loginForm"> 
 
             <input 
                 type="text"
@@ -39,6 +39,27 @@
         </form>
 
     </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            // Evita que a página recarregue ou mude de endereço imediatamente
+            event.preventDefault(); 
+
+            // Captura os valores digitados nos inputs
+            const usuarioDigitado = document.getElementById('nome').value;
+            const senhaDigitada = document.getElementById('senha').value;
+
+            // Validação das credenciais
+            if (usuarioDigitado === 'admin' && senhaDigitada === 'admin') {
+                // Se estiver correto, redireciona para a index
+                window.location.href = './index.html';
+            } else {
+                // Se estiver incorreto, exibe um alerta e limpa o campo de senha
+                alert('Usuário ou senha incorretos!');
+                document.getElementById('senha').value = '';
+            }
+        });
+    </script>
 
 </body>
 </html>

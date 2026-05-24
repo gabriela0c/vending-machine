@@ -105,6 +105,6 @@ async function excluirUsuario(nome) {
 }
 
 async function editarUsuario(nome) {
-
-    GoToCadUser();
+    // Passa o nome do usuário na URL para a página de cadastro saber quem editar
+    window.location.href = `/caduser.html?edit=${encodeURIComponent(nome)}`;
 }
