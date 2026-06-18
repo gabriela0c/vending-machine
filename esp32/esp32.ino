@@ -14,7 +14,7 @@
 #define WIDTH 170
 #define HEIGHT 320
 
-#define DISTANCIA_PRODUTO_MM 80 
+#define DISTANCIA_PRODUTO_MM 230
 #define BUZZER_PIN 2
 
 TTP229 ttp229;
