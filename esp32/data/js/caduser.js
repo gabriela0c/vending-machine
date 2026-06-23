@@ -58,7 +58,6 @@ window.addEventListener("DOMContentLoaded", async () => {
         const dados = {
             nome: document.getElementById("nome").value,
             cpf: document.getElementById("cpf").value,
-            senha: document.getElementById("senha").value,
             saldo: Number(document.getElementById("saldo").value),
             maioridade: maioridadeSelecionada ? maioridadeSelecionada.value : ""
         };

@@ -39,10 +39,13 @@ public:
   volatile int produtoSelecionado = 0;
   volatile bool temNovoProduto = false;
   // Busca os dados de um produto com base no slot físico (1 a 4)
-  bool obterProdutoPorSlot(int slot, String &nome, double &preco, String &maioridade);
+  bool obterProdutoPorSlot(int slot, String &nome, double &preco, String &maioridade, int &estoque);
   
   // Deduz o valor do produto do saldo atual do usuário e salva no LittleFS
   bool debitarSaldoUsuario(String nomeUsuario, double valor);
+
+  // Decrementa o estoque de um produto pelo slot
+  bool decrementarEstoque(int slot);
 
   void resetarModoGestos();
 };

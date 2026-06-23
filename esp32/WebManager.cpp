@@ -149,6 +149,7 @@ void WebManager::setupRoutes() {
       String nome = doc["nome"];
       double valor = doc["valor"];
       String maioridade = doc["maioridade"];
+      int estoque = doc["estoque"] | 0;
   
       DynamicJsonDocument docBanco(4096);
       String conteudoAtual = this->lerArquivo("/produtos.json");
@@ -167,6 +168,7 @@ void WebManager::setupRoutes() {
         if (p["nome"].as<String>() == nome) {
           p["valor"] = valor;
           p["maioridade"] = maioridade;
+          p["estoque"] = estoque;
           atualizado = true;
           break;
         }
@@ -178,6 +180,7 @@ void WebManager::setupRoutes() {
           novoProd["nome"] = nome;
           novoProd["valor"] = valor;
           novoProd["maioridade"] = maioridade;
+          novoProd["estoque"] = estoque;
         } else {
           request->send(400, "text/plain", "Erro: Limite maximo de 4 produtos atingido!");
           return;
@@ -240,7 +243,6 @@ void WebManager::setupRoutes() {
       StaticJsonDocument<256> usuarioFormatado;
       usuarioFormatado["nome"] = docNovo["nome"];
       usuarioFormatado["cpf"] = docNovo["cpf"];
-      usuarioFormatado["senha"] = docNovo["senha"];
       usuarioFormatado["maioridade"] = docNovo["maioridade"];
       usuarioFormatado["saldo"] = docNovo["saldo"].as<double>(); 
 
@@ -256,7 +258,6 @@ void WebManager::setupRoutes() {
       for (JsonObject u : usuarios) {
         if (u["nome"].as<String>() == nomeNovo) {
           u["cpf"] = usuarioFormatado["cpf"];
-          u["senha"] = usuarioFormatado["senha"];
           u["maioridade"] = usuarioFormatado["maioridade"];
           u["saldo"] = usuarioFormatado["saldo"];
           encontrado = true;
@@ -380,7 +381,7 @@ void WebManager::setupRoutes() {
   });
 }
 
-bool WebManager::obterProdutoPorSlot(int slot, String &nome, double &preco, String &maioridade) {
+bool WebManager::obterProdutoPorSlot(int slot, String &nome, double &preco, String &maioridade, int &estoque) {
   String conteudo = lerArquivo("/produtos.json");
   if (conteudo == "") return false;
 
@@ -395,7 +396,32 @@ bool WebManager::obterProdutoPorSlot(int slot, String &nome, double &preco, Stri
     nome = p["nome"].as<String>();
     preco = p["valor"].as<double>();
     maioridade = p["maioridade"].as<String>();
+    estoque = p["estoque"] | 0;
     return true;
+  }
+  return false;
+}
+
+bool WebManager::decrementarEstoque(int slot) {
+  String conteudo = lerArquivo("/produtos.json");
+  if (conteudo == "") return false;
+
+  DynamicJsonDocument doc(4096);
+  if (deserializeJson(doc, conteudo)) return false;
+
+  JsonArray produtos = doc["produtos"].as<JsonArray>();
+  int index = slot - 1;
+
+  if (index >= 0 && index < produtos.size()) {
+    JsonObject p = produtos[index];
+    int estoqueAtual = p["estoque"] | 0;
+    if (estoqueAtual > 0) {
+      p["estoque"] = estoqueAtual - 1;
+      String resultado;
+      serializeJson(doc, resultado);
+      gravarArquivo("/produtos.json", resultado);
+      return true;
+    }
   }
   return false;
 }

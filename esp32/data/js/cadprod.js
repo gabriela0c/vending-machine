@@ -10,6 +10,27 @@ function GoToGerProd(){
     
 }
 
+window.addEventListener("DOMContentLoaded", () => {
+    const produto = JSON.parse(localStorage.getItem("produto_editando"));
+    if (produto) {
+        document.getElementById("nomeprod").value = produto.nome;
+        document.getElementById("valorprod").value = produto.valor;
+        document.getElementById("estoqueprod").value = produto.estoque || 0;
+        
+        if (produto.maioridade === "sim") {
+            document.getElementById("maioridade1").checked = true;
+        } else {
+            document.getElementById("maioridade2").checked = true;
+        }
+        
+        // Bloqueia o nome para não criar duplicatas se quiser apenas editar
+        // document.getElementById("nomeprod").disabled = true; 
+        
+        // Limpa para não preencher em um novo cadastro futuro
+        localStorage.removeItem("produto_editando");
+    }
+});
+
 document.getElementById("formprod")
 .addEventListener("submit", async (e) => {
 
@@ -22,6 +43,9 @@ document.getElementById("formprod")
 
         valor:
             Number(document.getElementById("valorprod").value),
+
+        estoque:
+            Number(document.getElementById("estoqueprod").value),
 
         maioridade:
             document.querySelector(

@@ -177,7 +177,7 @@ button:hover {
 /* geruser =============================================== */
 
 .list-box {
-    width: 450px;
+    width: 650px; /* Aumentado para acomodar mais colunas */
     height: 500px;
     background: #b4b4b4;
     border-radius: 8px;
@@ -218,11 +218,11 @@ button:hover {
     display: flex;
     background: #2e2e2e;
     color: white;
-    padding: 6px;
+    padding: 10px 15px;
     letter-spacing: 1px;
-    gap: 75px;
     opacity: 0.8;
     align-items: center;
+    justify-content: space-between;
 
 }
 
@@ -230,13 +230,11 @@ button:hover {
     display: flex;
     background: #737373;
     color: white;
-    padding: 6px;
+    padding: 10px 15px;
     letter-spacing: 1px;
-    gap: 75px;
-    opacity: 0.3;
+    opacity: 1; /* Aumentado para legibilidade */
     align-items: center;
-    
-
+    justify-content: space-between;
 }
 
 
@@ -244,35 +242,37 @@ button:hover {
     display: flex;
     background: #2e2e2e;
     color: white;
-    padding: 6px;
+    padding: 10px 15px;
     letter-spacing: 1px;
-    gap: 75px;
-    opacity: 0.3;
+    opacity: 1; /* Aumentado para legibilidade */
     align-items: center;
-
+    justify-content: space-between;
 }
+
 .textc {
-    width: 20%;
+    flex: 1;
     text-align: left;
-    font-size: 20px;
-
-}
-.cad {
-    display: flex;
-    background: #9e9e9e;
-    width: 100%;
-    gap: 28px;
-    align-items: center;
-    justify-content: left;
-
+    font-size: 18px;
+    padding-right: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-
-
+/* Coluna de ações com largura fixa para não empurrar os outros */
 .actions {
   display: flex;
   gap: 10px;
+  width: 120px; 
+  justify-content: flex-end;
 }
+
+/* Ajustes de proporção para as colunas */
+.col-nome { flex-basis: 25%; }
+.col-preco { flex-basis: 15%; }
+.col-class { flex-basis: 20%; }
+.col-estoque { flex-basis: 15%; }
+.col-acoes { flex-basis: 120px; flex-grow: 0; flex-shrink: 0; }
 
 /* BOTÃO SEM ESTILO PADRÃO */
 .btn-icon {

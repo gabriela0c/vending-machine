@@ -43,11 +43,15 @@ async function carregarProdutos() {
 
         div.innerHTML = `
 
-            <div class="textc">
+            <div class="textc col-nome">
                 <span>${produto.nome}</span>
             </div>
 
-            <div class="textc">
+            <div class="textc col-preco">
+                <span>R$ ${produto.valor.toFixed(2)}</span>
+            </div>
+
+            <div class="textc col-class">
                 <span>
                     ${
                         produto.maioridade === "sim"
@@ -57,11 +61,15 @@ async function carregarProdutos() {
                 </span>
             </div>
 
-            <div class="actions">
+            <div class="textc col-estoque">
+                <span>${produto.estoque || 0}</span>
+            </div>
+
+            <div class="actions col-acoes">
 
                 <button
                     class="btn-icon"
-                    onclick="editarProduto('${produto.nome}')">
+                    onclick='editarProduto(${JSON.stringify(produto)})'>
 
                     <img src="png/editar.png">
 
@@ -102,8 +110,8 @@ async function excluirProduto(nome) {
     GoToGerProd();
 }
 
-async function editarProduto(nome) {
-
+async function editarProduto(produto) {
+    localStorage.setItem("produto_editando", JSON.stringify(produto));
     GoToCadProd();
 }
 

@@ -30,8 +30,46 @@ DcMotor* motors[4] = {&motor1, &motor2, &motor3, &motor4};
 
 void quickWrite(String text) {
   tft.fillScreen(ST77XX_BLACK);
-  tft.setCursor(10, ((int) WIDTH/2)-20);
+  tft.setCursor(10, 65); // Ajustado para visibilidade
   tft.print(text);
+}
+
+void exibirMenu(int foco = 0) {
+  tft.fillScreen(ST77XX_BLACK);
+  tft.setTextSize(2);
+  
+  for (int i = 1; i <= 4; i++) {
+    String nome = "";
+    double preco = 0.0;
+    String maioridade = "";
+    int estoque = 0;
+    
+    int yPos = 10 + (i - 1) * 40;
+    
+    if (webManager.obterProdutoPorSlot(i, nome, preco, maioridade, estoque)) {
+      if (foco == i) {
+        tft.fillRect(0, yPos - 5, 320, 35, ST77XX_WHITE);
+        tft.setTextColor(ST77XX_BLACK);
+      } else {
+        tft.setTextColor(ST77XX_WHITE);
+      }
+      
+      tft.setCursor(10, yPos);
+      tft.print(String(i) + ". " + nome);
+      
+      tft.setCursor(200, yPos);
+      if (foco == i) {
+        tft.print("Est: " + String(estoque));
+      } else {
+        tft.print("R$ " + String(preco, 2));
+      }
+    } else {
+      tft.setTextColor(ST77XX_YELLOW);
+      tft.setCursor(10, yPos);
+      tft.print(String(i) + ". (Vazio)");
+    }
+  }
+  tft.setTextColor(ST77XX_WHITE);
 }
 
 byte waitForInput(TTP229 &keyboard) {
@@ -101,10 +139,12 @@ void setup() {
 }
 
 void loop() {
-  quickWrite("Escolha o produto\n(Teclado ou Gesto)");
+  exibirMenu(0);
   Serial.println("Aguardando escolha do produto...");
 
   int escolha = 0;
+  unsigned long tempoInicioSegurando = 0;
+  int ultimoFoco = 0;
 
   // 1. Loop de escuta híbrida (Teclado ou Gesto)
   while (true) {
@@ -115,10 +155,30 @@ void loop() {
     }
 
     byte teclaPressionada = ttp229.readKeypad();
+    
     if (teclaPressionada >= 1 && teclaPressionada <= 4) {
-      escolha = teclaPressionada;
-      digitalWrite(BUZZER_PIN, HIGH); delay(100); digitalWrite(BUZZER_PIN, LOW);
-      break; 
+      if (teclaPressionada != ultimoFoco) {
+        ultimoFoco = teclaPressionada;
+        tempoInicioSegurando = millis();
+        exibirMenu(ultimoFoco);
+        digitalWrite(BUZZER_PIN, HIGH); delay(50); digitalWrite(BUZZER_PIN, LOW);
+      } else {
+        // Já estava segurando a mesma tecla
+        if (millis() - tempoInicioSegurando >= 3000) {
+          escolha = teclaPressionada;
+          digitalWrite(BUZZER_PIN, HIGH); 
+          delay(500); // Beep longo para confirmar
+          digitalWrite(BUZZER_PIN, LOW);
+          break;
+        }
+      }
+    } else {
+      // Nenhuma tecla pressionada
+      if (ultimoFoco != 0) {
+        ultimoFoco = 0;
+        tempoInicioSegurando = 0;
+        exibirMenu(0);
+      }
     }
     delay(50); 
   }
@@ -127,14 +187,24 @@ void loop() {
   String nomeProd = "";
   double precoProd = 0.0;
   String maioridadeProd = "";
+  int estoqueProd = 0;
 
   // 2. VALIDAÇÃO: Verifica se existe produto cadastrado para este motor/slot
-  if (!webManager.obterProdutoPorSlot(escolha, nomeProd, precoProd, maioridadeProd)) {
+  if (!webManager.obterProdutoPorSlot(escolha, nomeProd, precoProd, maioridadeProd, estoqueProd)) {
     quickWrite("Slot " + String(escolha) + "\nNao cadastrado!");
     digitalWrite(BUZZER_PIN, HIGH); delay(1000); digitalWrite(BUZZER_PIN, LOW);
     webManager.resetarModoGestos();
     delay(2000);
     return; // Reinicia o loop, cancelando a operação
+  }
+
+  // 2.1 VERIFICAÇÃO DE ESTOQUE
+  if (estoqueProd <= 0) {
+    quickWrite(nomeProd + "\nSem estoque!");
+    digitalWrite(BUZZER_PIN, HIGH); delay(1000); digitalWrite(BUZZER_PIN, LOW);
+    webManager.resetarModoGestos();
+    delay(1200);
+    return;
   }
 
   // Mostra o produto selecionado antes da biometria facial
@@ -162,6 +232,7 @@ void loop() {
         
         quickWrite("Liberando produto...");
         releaseProduct(escolha); // Ativa o respectivo motor helicoidal
+        webManager.decrementarEstoque(escolha);
       } else {
         quickWrite("Erro interno\nao processar debito");
         delay(2500);
